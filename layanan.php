@@ -57,6 +57,9 @@
                                     <span class="badge text-bg-success">Aktif</span>
                                 </div>
                                 <small class="text-muted d-block mt-2">Estimasi: 2 Hari</small>
+                                <a href="#" class="btn btn-outline-primary btn-sm w-100 mt-3">
+                                <i class="bi bi-info-circle me-1"></i> Lihat Detail
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -76,6 +79,9 @@
                                     <span class="badge text-bg-success">Aktif</span>
                                 </div>
                                 <small class="text-muted d-block mt-2">Estimasi: 1 Hari</small>
+                                <a href="#" class="btn btn-outline-primary btn-sm w-100 mt-3">
+                              <i class="bi bi-info-circle me-1"></i> Lihat Detail
+                            </a>
                             </div>
                         </div>
                     </div>
@@ -95,6 +101,9 @@
                                     <span class="badge text-bg-success">Aktif</span>
                                 </div>
                                 <small class="text-muted d-block mt-2">Estimasi: 1 Hari</small>
+                                <a href="#" class="btn btn-outline-primary btn-sm w-100 mt-3">
+                                <i class="bi bi-info-circle me-1"></i> Lihat Detail
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -114,6 +123,9 @@
                                     <span class="badge text-bg-success">Aktif</span>
                                 </div>
                                 <small class="text-muted d-block mt-2">Estimasi: 3 Hari</small>
+                                <a href="#" class="btn btn-outline-primary btn-sm w-100 mt-3">
+                                <i class="bi bi-info-circle me-1"></i> Lihat Detail
+                                </a>
                             </div>
                         </div>
                     </div>
