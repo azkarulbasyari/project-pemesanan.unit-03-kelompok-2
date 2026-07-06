@@ -32,12 +32,13 @@
                         <form action="dashboard.html" method="post">
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Username</label>
-                                <input type="text" class="form-control" placeholder="Masukkan username" required>
+                                <input type="text" name="username" class="form-control" placeholder="Masukkan username" minlength="4"
+                                required>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Password</label>
-                                <input type="password" class="form-control" placeholder="Masukkan password" required>
+                                <input type="password" name="password" class="form-control" placeholder="Masukkan password" minlength="8" required>
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center mb-4">
