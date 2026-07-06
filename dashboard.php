@@ -117,7 +117,8 @@
                             <div class="col-md-6 mt-3 mt-md-0">
                                 <form action="#" method="get">
                                     <div class="input-group">
-                                        <input type="text" class="form-control" placeholder="Cari kode, pelanggan, atau layanan">
+                                        <input type="text" name="keyword" class="form-control" placeholder="Cari kode, pelanggan, atau layanan" 
+                                        autocomplete="off" maxlength="50">
                                         <button class="btn btn-primary" type="submit">
                                             <i class="bi bi-search"></i>
                                         </button>
