@@ -57,17 +57,17 @@
 
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Nama Pelanggan</label>
-                                    <input type="text" class="form-control" value="Ahmad Fauzan" required>
+                                    <input type="text" class="form-control" value="Ahmad Fauzan" minlength="3" maxlength="50" required>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Nomor HP</label>
-                                    <input type="text" class="form-control" value="081234567890" required>
+                                    <input type="text" class="form-control" value="081234567890" minlength="10" maxlength="13" required> required>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Email Pelanggan</label>
-                                    <input type="email" class="form-control" value="ahmad@email.com">
+                                    <input type="email" class="form-control" value="ahmad@email.com maxlength="100" required>">
                                 </div>
 
                                 <div class="col-md-6">
