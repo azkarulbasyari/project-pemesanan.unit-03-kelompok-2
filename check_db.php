@@ -1,29 +1,25 @@
 <?php
-/**
- * FUNGSI FILE:
- * Berkas utility untuk memeriksa dan memigrasi kolom baru 'dibuat_oleh' pada tabel 'pesanan'.
- * Berkas ini berguna saat sinkronisasi skema database secara manual.
- */
+// Script untuk migrasi otomatis kolom 'dibuat_oleh' ke dalam tabel 'pesanan' jika belum ada
 
-// Memanggil koneksi database dari folder konfigurasi
+// Memanggil file koneksi database agar query sql bisa dijalankan
 require_once 'config/koneksi.php';
 
-// QUERY DATABASE: Memeriksa apakah kolom 'dibuat_oleh' sudah ada dalam struktur tabel 'pesanan'
+// Melakukan cek apakah kolom 'dibuat_oleh' sudah pernah dibuat sebelumnya di tabel pesanan
 $res = mysqli_query($koneksi, "SHOW COLUMNS FROM pesanan LIKE 'dibuat_oleh'");
 
-// KONDISI IF-ELSE: Jika hasil baris query sama dengan 0 (artinya kolom belum terdaftar di database)
+// Jika kolom belum ditemukan (jumlah baris hasil cek bernilai 0), lakukan pembuatan kolom
 if (mysqli_num_rows($res) == 0) {
-    // QUERY DATABASE: Menambahkan kolom baru 'dibuat_oleh' sebagai ENUM ('admin', 'customer') secara dinamis
+    // Jalankan query ALTER TABLE untuk menambahkan kolom dibuat_oleh dengan tipe data ENUM
     $alter = mysqli_query($koneksi, "ALTER TABLE pesanan ADD COLUMN dibuat_oleh ENUM('admin', 'customer') DEFAULT 'customer' AFTER created_by");
     
-    // KONDISI IF-ELSE (Nested): Memvalidasi hasil query ALTER TABLE
+    // Tampilkan informasi status hasil eksekusi query migrasi
     if ($alter) {
         echo "SUCCESS: Column 'dibuat_oleh' added successfully.\n";
     } else {
         echo "ERROR: Failed to add column. Error: " . mysqli_error($koneksi) . "\n";
     }
 } else {
-    // KONDISI ELSE: Jika kolom 'dibuat_oleh' sudah ada di database, kirim informasi
+    // Informasi jika kolom tersebut memang sudah terdaftar di struktur tabel
     echo "INFO: Column 'dibuat_oleh' already exists.\n";
 }
 ?>

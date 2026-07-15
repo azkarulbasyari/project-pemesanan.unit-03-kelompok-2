@@ -1,52 +1,47 @@
 <?php
-// ==============================================================
-// PROSES PENGOLAHAN DATA PESANAN / CRUD (process/pesanan.php)
-// ==============================================================
-
+// Mengaktifkan buffer output untuk menghindari pengiriman header HTTP sebelum waktunya
 ob_start();
 
-// Mulai session dan pastikan pengguna telah login
+// Memulai session PHP
 session_start();
 
-// Set header agar output berupa format JSON (digunakan untuk respon AJAX)
+// Format return server harus JSON karena diakses via AJAX (komunikasi asinkronus)
 header('Content-Type: application/json');
 
-// Validasi: pastikan pengguna sudah login sebelum mengakses
+// Proteksi keamanan: Pengunjung wajib login sebelum bisa melakukan manipulasi data pesanan
 if (!isset($_SESSION['user_id'])) {
-    if (ob_get_length()) ob_clean();
+    if (ob_get_length()) ob_clean(); // Bersihkan buffer agar return murni JSON saja
     echo json_encode(['status' => 'error', 'message' => 'Akses ditolak. Silakan login terlebih dahulu.']);
     exit;
 }
 
-// Hubungkan file koneksi ke database
+// Hubungkan file koneksi database
 require_once '../config/koneksi.php';
 
-// Migrasi database mandiri: Cek apakah kolom 'sumber_pesanan' sudah ada di tabel 'pesanan'
+// Automigrasi struktur database: pastikan kolom 'sumber_pesanan' tersedia di tabel pesanan
 $check_col = mysqli_query($koneksi, "SHOW COLUMNS FROM pesanan LIKE 'sumber_pesanan'");
 if (mysqli_num_rows($check_col) == 0) {
     mysqli_query($koneksi, "ALTER TABLE pesanan ADD COLUMN sumber_pesanan ENUM('online', 'telepon', 'walk_in') DEFAULT 'online' AFTER created_by");
 }
 
-// Fungsi pembantu (helper) untuk mengirim respon error dalam format JSON
+// Fungsi helper untuk menyederhanakan respons pengiriman error berformat JSON
 function sendError($message) {
-    if (ob_get_length()) ob_clean();
+    if (ob_get_length()) ob_clean(); // Bersihkan buffer agar tidak ada kebocoran output HTML/teks
     echo json_encode(['status' => 'error', 'message' => $message]);
     exit;
 }
 
-// Ambil parameter aksi yang dikirim melalui URL GET
+// Menangkap parameter aksi tindakan dari request AJAX (?action=...)
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
-// --------------------------------------------------------------
-// AKSI: GET_LAYANAN_DETAIL (Mengambil Rincian Data Layanan untuk Modal)
-// --------------------------------------------------------------
+// 1. Ambil Detail Layanan: Menghasilkan markup HTML dari detail layanan tertentu
 if ($action === 'get_layanan_detail') {
     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     if ($id <= 0) {
         sendError('ID layanan tidak valid.');
     }
 
-    // Menggunakan Prepared Statement untuk keamanan database
+    // Gunakan Prepared Statement untuk mencegah SQL Injection saat pencarian layanan
     $stmt = mysqli_prepare($koneksi, "SELECT * FROM layanan WHERE id = ?");
     mysqli_stmt_bind_param($stmt, "i", $id);
     mysqli_stmt_execute($stmt);
@@ -57,7 +52,7 @@ if ($action === 'get_layanan_detail') {
         sendError('Layanan tidak ditemukan.');
     }
 
-    // Ambil 3 layanan rekomendasi lainnya
+    // Mengambil 3 produk/layanan lain sebagai rekomendasi alternatif untuk user
     $stmt_rec = mysqli_prepare($koneksi, "SELECT * FROM layanan WHERE id != ? LIMIT 3");
     mysqli_stmt_bind_param($stmt_rec, "i", $id);
     mysqli_stmt_execute($stmt_rec);
@@ -67,11 +62,12 @@ if ($action === 'get_layanan_detail') {
         $rekomendasi[] = $row;
     }
 
-    // Render file template detail layanan secara aman
+    // Gunakan Output Buffering untuk membaca template HTML luar lalu menyimpannya dalam variabel string
     ob_start();
     include '../pages/layanan-detail.php';
     $html = ob_get_clean();
 
+    // Kirim respons balik berupa HTML yang siap di-render oleh browser
     echo json_encode([
         'status' => 'success', 
         'html' => $html, 
@@ -82,15 +78,14 @@ if ($action === 'get_layanan_detail') {
     exit;
 }
 
-// --------------------------------------------------------------
-// AKSI: GET_LAYANAN_SUMMARY (Mengambil Ringkasan Data Layanan)
-// --------------------------------------------------------------
+// 2. Ringkasan Data Layanan: Digunakan saat form pesanan memilih paket tertentu
 if ($action === 'get_layanan_summary') {
     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     if ($id <= 0) {
         sendError('ID layanan tidak valid.');
     }
 
+    // Ambil info lengkap paket layanan mulai dari nama, kategori, harga, hingga estimasi pengerjaan
     $stmt = mysqli_prepare($koneksi, "SELECT id, nama_layanan, kategori, harga, estimasi_pengerjaan, status_layanan, deskripsi FROM layanan WHERE id = ?");
     mysqli_stmt_bind_param($stmt, "i", $id);
     mysqli_stmt_execute($stmt);
@@ -101,6 +96,7 @@ if ($action === 'get_layanan_summary') {
         sendError('Layanan tidak ditemukan.');
     }
 
+    // Format nominal harga agar ramah dibaca di antarmuka web
     $layanan['harga_formatted'] = "Rp " . number_format($layanan['harga'], 0, ',', '.');
     $layanan['status_layanan'] = ucfirst($layanan['status_layanan']);
 
@@ -111,16 +107,14 @@ if ($action === 'get_layanan_summary') {
     exit;
 }
 
-// --------------------------------------------------------------
-// AKSI: GET_DETAIL (Mengambil Rincian Data Pesanan untuk Form Edit)
-// --------------------------------------------------------------
+// 3. Ambil Detail Pesanan: Mengambil relasi data pesanan, layanan, dan pelanggan untuk form edit
 if ($action === 'get_detail') {
     $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     if ($id <= 0) {
         sendError('ID pesanan tidak valid.');
     }
 
-    // Query Menggunakan Prepared Statement untuk keamanan mengambil detail pesanan
+    // Query gabungan (JOIN) tiga tabel: pesanan, layanan, dan pelanggan
     $sql = "SELECT p.*, l.harga AS harga_layanan, pl.nama_pelanggan, pl.no_hp, pl.email, pl.alamat 
             FROM pesanan p 
             JOIN layanan l ON p.layanan_id = l.id 
@@ -141,11 +135,9 @@ if ($action === 'get_detail') {
     exit;
 }
 
-// --------------------------------------------------------------
-// AKSI: CREATE (Menyimpan Data Pesanan Baru ke Database)
-// --------------------------------------------------------------
+// 4. Tambah Pesanan Baru: Memproses input form pelanggan dan transaksi pemesanan
 if ($action === 'create') {
-    // Ambil data POST yang dikirim oleh form tambah pesanan
+    // Sanitasi data string input untuk menghindari spasi tak sengaja
     $nama_pelanggan = isset($_POST['nama_pelanggan']) ? trim($_POST['nama_pelanggan']) : '';
     $no_hp          = isset($_POST['no_hp']) ? trim($_POST['no_hp']) : '';
     $email          = isset($_POST['email']) ? trim($_POST['email']) : '';
@@ -159,13 +151,14 @@ if ($action === 'create') {
     $sumber_pesanan = isset($_POST['sumber_pesanan']) ? trim($_POST['sumber_pesanan']) : 'online';
     $created_by     = $_SESSION['user_id'];
 
-    // Validasi data sisi server (Server-side Validations)
+    // Validasi data input di sisi server (Server-side Validation)
     if (empty($nama_pelanggan)) {
         sendError('Nama pelanggan tidak boleh kosong.');
     }
     if (empty($no_hp)) {
         sendError('Nomor HP tidak boleh kosong.');
     }
+    // Validasi nomor HP harus angka 12-13 digit menggunakan Regular Expression
     if (!preg_match('/^[0-9]{12,13}$/', $no_hp)) {
         sendError('Nomor HP harus berupa angka dengan panjang 12 atau 13 digit.');
     }
@@ -187,6 +180,7 @@ if ($action === 'create') {
     if ($total_harga <= 0) {
         sendError('Total harga wajib diisi dan harus lebih dari nol.');
     }
+    // Pastikan status pesanan terdaftar di enum status yang diizinkan
     $allowed_statuses = ['baru', 'diproses', 'selesai', 'dibatalkan'];
     if (!in_array($status_pesanan, $allowed_statuses)) {
         sendError('Status pesanan tidak valid.');
@@ -196,22 +190,22 @@ if ($action === 'create') {
         $sumber_pesanan = 'online';
     }
 
-    // Periksa apakah pelanggan sudah pernah terdaftar (Prepared Statement)
+    // Cari pelanggan berdasarkan nama. Jika sudah terdaftar, update data kontaknya. Jika belum, daftarkan baru.
     $stmt_check = mysqli_prepare($koneksi, "SELECT id FROM pelanggan WHERE LOWER(nama_pelanggan) = LOWER(?) LIMIT 1");
     mysqli_stmt_bind_param($stmt_check, "s", $nama_pelanggan);
     mysqli_stmt_execute($stmt_check);
     $res_check = mysqli_stmt_get_result($stmt_check);
 
     if ($res_check && mysqli_num_rows($res_check) > 0) {
+        // Pelanggan sudah ada, update nomor HP, email, dan alamat
         $pelanggan_row = mysqli_fetch_assoc($res_check);
         $pelanggan_id = intval($pelanggan_row['id']);
 
-        // Perbarui info kontak pelanggan (Prepared Statement)
         $stmt_up_cust = mysqli_prepare($koneksi, "UPDATE pelanggan SET no_hp = ?, email = ?, alamat = ? WHERE id = ?");
         mysqli_stmt_bind_param($stmt_up_cust, "sssi", $no_hp, $email, $alamat, $pelanggan_id);
         mysqli_stmt_execute($stmt_up_cust);
     } else {
-        // Jika pelanggan belum ada, buat data pelanggan baru (Prepared Statement)
+        // Pelanggan belum ada, buat data baru
         $stmt_ins_cust = mysqli_prepare($koneksi, "INSERT INTO pelanggan (nama_pelanggan, no_hp, email, alamat) VALUES (?, ?, ?, ?)");
         mysqli_stmt_bind_param($stmt_ins_cust, "ssss", $nama_pelanggan, $no_hp, $email, $alamat);
         if (mysqli_stmt_execute($stmt_ins_cust)) {
@@ -221,14 +215,14 @@ if ($action === 'create') {
         }
     }
 
-    // Logika pembuatan otomatis kode_pesanan secara urut
+    // Pembuatan Kode Transaksi Otomatis (Format: PSN-TAHUN-NOMOR_URUT)
     $year = date('Y', strtotime($tanggal_pesan));
     if (!$year || $year === '1970') {
         $year = date('Y');
     }
     $prefix = "PSN-" . $year . "-";
     
-    // Cari urutan angka terakhir pada tahun ini (Prepared Statement)
+    // Cari transaksi terakhir di tahun tersebut untuk menentukan nomor urut selanjutnya
     $like_prefix = $prefix . "%";
     $stmt_seq = mysqli_prepare($koneksi, "SELECT kode_pesanan FROM pesanan WHERE kode_pesanan LIKE ? ORDER BY id DESC LIMIT 1");
     mysqli_stmt_bind_param($stmt_seq, "s", $like_prefix);
@@ -241,14 +235,15 @@ if ($action === 'create') {
         $last_kode = $last_row['kode_pesanan'];
         $parts = explode('-', $last_kode);
         if (count($parts) === 3) {
-            $next_num = intval($parts[2]) + 1;
+            $next_num = intval($parts[2]) + 1; // Naikkan 1 nomor urut dari kode terakhir
         }
     }
     
+    // Gabungkan prefix dan nomor urut (pad format 3 digit, misal: 001, 002)
     $kode_pesanan = $prefix . str_pad($next_num, 3, '0', STR_PAD_LEFT);
     $tanggal_selesai_val = !empty($tanggal_selesai) ? $tanggal_selesai : null;
 
-    // Query SQL menggunakan Prepared Statement untuk menyimpan data transaksi pesanan baru
+    // Masukkan data pesanan baru ke tabel pesanan
     $sql_ins = "INSERT INTO pesanan (kode_pesanan, pelanggan_id, layanan_id, tanggal_pesan, tanggal_selesai, catatan, total_harga, status_pesanan, created_by, sumber_pesanan) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
@@ -258,7 +253,7 @@ if ($action === 'create') {
     if (mysqli_stmt_execute($stmt_ins_p)) {
         $new_id = mysqli_insert_id($koneksi);
         
-        // Ambil nama layanan untuk respon ajax
+        // Ambil nama layanan untuk dikembalikan sebagai respon AJAX
         $stmt_lay_name = mysqli_prepare($koneksi, "SELECT nama_layanan FROM layanan WHERE id = ?");
         mysqli_stmt_bind_param($stmt_lay_name, "i", $layanan_id);
         mysqli_stmt_execute($stmt_lay_name);
@@ -288,11 +283,8 @@ if ($action === 'create') {
     exit;
 }
 
-// --------------------------------------------------------------
-// AKSI: UPDATE (Memperbarui Data Pesanan yang Sudah Ada)
-// --------------------------------------------------------------
+// 5. Update/Ubah Data Pesanan: Memperbarui isi pesanan yang sudah ada
 if ($action === 'update') {
-    // Ambil data POST untuk pembaruan data pesanan
     $id             = isset($_POST['id']) ? intval($_POST['id']) : 0;
     $nama_pelanggan = isset($_POST['nama_pelanggan']) ? trim($_POST['nama_pelanggan']) : '';
     $no_hp          = isset($_POST['no_hp']) ? trim($_POST['no_hp']) : '';
@@ -305,7 +297,7 @@ if ($action === 'update') {
     $total_harga    = isset($_POST['total_harga']) ? floatval($_POST['total_harga']) : 0.00;
     $status_pesanan = isset($_POST['status_pesanan']) ? trim($_POST['status_pesanan']) : 'baru';
 
-    // Validasi data sisi server (Server-side Validations)
+    // Validasi form data update
     if ($id <= 0) {
         sendError('ID pesanan tidak valid.');
     }
@@ -341,7 +333,7 @@ if ($action === 'update') {
         sendError('Status pesanan tidak valid.');
     }
 
-    // Periksa apakah pelanggan sudah terdaftar (Prepared Statement)
+    // Pengecekan / sinkronisasi data pelanggan seperti pada proses insert
     $stmt_check = mysqli_prepare($koneksi, "SELECT id FROM pelanggan WHERE LOWER(nama_pelanggan) = LOWER(?) LIMIT 1");
     mysqli_stmt_bind_param($stmt_check, "s", $nama_pelanggan);
     mysqli_stmt_execute($stmt_check);
@@ -351,12 +343,10 @@ if ($action === 'update') {
         $pelanggan_row = mysqli_fetch_assoc($res_check);
         $pelanggan_id = intval($pelanggan_row['id']);
 
-        // Perbarui info kontak pelanggan (Prepared Statement)
         $stmt_up_cust = mysqli_prepare($koneksi, "UPDATE pelanggan SET no_hp = ?, email = ?, alamat = ? WHERE id = ?");
         mysqli_stmt_bind_param($stmt_up_cust, "sssi", $no_hp, $email, $alamat, $pelanggan_id);
         mysqli_stmt_execute($stmt_up_cust);
     } else {
-        // Buat data pelanggan baru jika tidak ditemukan (Prepared Statement)
         $stmt_ins_cust = mysqli_prepare($koneksi, "INSERT INTO pelanggan (nama_pelanggan, no_hp, email, alamat) VALUES (?, ?, ?, ?)");
         mysqli_stmt_bind_param($stmt_ins_cust, "ssss", $nama_pelanggan, $no_hp, $email, $alamat);
         if (mysqli_stmt_execute($stmt_ins_cust)) {
@@ -368,7 +358,7 @@ if ($action === 'update') {
 
     $tanggal_selesai_val = !empty($tanggal_selesai) ? $tanggal_selesai : null;
 
-    // Query SQL menggunakan Prepared Statement untuk memperbarui data pesanan
+    // Lakukan query UPDATE ke database
     $sql_up = "UPDATE pesanan SET 
                 pelanggan_id = ?, 
                 layanan_id = ?, 
@@ -391,16 +381,13 @@ if ($action === 'update') {
     exit;
 }
 
-// --------------------------------------------------------------
-// AKSI: DELETE (Menghapus Data Pesanan dari Database)
-// --------------------------------------------------------------
+// 6. Hapus Data Pesanan: Menghapus data pesanan berdasarkan ID
 if ($action === 'delete') {
     $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
     if ($id <= 0) {
         sendError('ID pesanan tidak valid.');
     }
 
-    // Query SQL menggunakan Prepared Statement untuk menghapus pesanan berdasarkan ID
     $stmt_del = mysqli_prepare($koneksi, "DELETE FROM pesanan WHERE id = ?");
     mysqli_stmt_bind_param($stmt_del, "i", $id);
     
@@ -418,6 +405,6 @@ if ($action === 'delete') {
     exit;
 }
 
-// Respon default jika parameter aksi tidak terdaftar
+// Respons error jika dipanggil dengan aksi yang tidak didukung
 sendError('Aksi tidak dikenali.');
 ?>
