@@ -1,0 +1,55 @@
+/* Styling Khusus Halaman Dashboard & Widget Linimasa */
+.timeline-item {
+    position: relative;
+    padding-bottom: 1.2rem;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -27px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--primary);
+    border: 2.5px solid #fff;
+    box-shadow: 0 0 0 1px var(--soft-border);
+}
+
+.timeline-item.status-baru::before {
+    background-color: #2563eb;
+}
+
+.timeline-item.status-diproses::before {
+    background-color: #f59e0b;
+}
+
+.timeline-item.status-selesai::before {
+    background-color: #16a34a;
+}
+
+.timeline-item.status-dibatalkan::before {
+    background-color: #dc2626;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.stat-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+.content-card {
+    transition: box-shadow 0.25s ease;
+}
+
+.content-card:hover {
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+}
