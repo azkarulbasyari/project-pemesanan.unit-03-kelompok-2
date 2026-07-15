@@ -440,4 +440,4 @@ if ($res_lay) {
 
 <div id="pesanan-metadata" class="d-none" data-user-role="<?php echo $_SESSION['role']; ?>"></div>
 
-<script src="assets/js/daftar-pesanan.js"></script>
+<script src="assets/js/daftar-pesanan.js?v=20260715"></script>

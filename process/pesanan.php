@@ -2,17 +2,36 @@
 // Mengaktifkan buffer output untuk menghindari pengiriman header HTTP sebelum waktunya
 ob_start();
 
+// Sembunyikan warning/notice PHP yang bisa merusak body JSON saat request AJAX
+ini_set('display_errors', '0');
+error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE & ~E_DEPRECATED & ~E_USER_WARNING & ~E_USER_NOTICE);
+mysqli_report(MYSQLI_REPORT_OFF);
+
 // Memulai session PHP
 session_start();
 
 // Format return server harus JSON karena diakses via AJAX (komunikasi asinkronus)
-header('Content-Type: application/json');
+if (!headers_sent()) {
+    header('Content-Type: application/json; charset=utf-8');
+}
+
+function sendJson($payload, $statusCode = 200) {
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=utf-8');
+        http_response_code($statusCode);
+    }
+
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
 
 // Proteksi keamanan: Pengunjung wajib login sebelum bisa melakukan manipulasi data pesanan
 if (!isset($_SESSION['user_id'])) {
-    if (ob_get_length()) ob_clean(); // Bersihkan buffer agar return murni JSON saja
-    echo json_encode(['status' => 'error', 'message' => 'Akses ditolak. Silakan login terlebih dahulu.']);
-    exit;
+    sendJson(['status' => 'error', 'message' => 'Akses ditolak. Silakan login terlebih dahulu.']);
 }
 
 // Hubungkan file koneksi database
@@ -26,9 +45,7 @@ if (mysqli_num_rows($check_col) == 0) {
 
 // Fungsi helper untuk menyederhanakan respons pengiriman error berformat JSON
 function sendError($message) {
-    if (ob_get_length()) ob_clean(); // Bersihkan buffer agar tidak ada kebocoran output HTML/teks
-    echo json_encode(['status' => 'error', 'message' => $message]);
-    exit;
+    sendJson(['status' => 'error', 'message' => $message]);
 }
 
 // Menangkap parameter aksi tindakan dari request AJAX (?action=...)
@@ -68,14 +85,13 @@ if ($action === 'get_layanan_detail') {
     $html = ob_get_clean();
 
     // Kirim respons balik berupa HTML yang siap di-render oleh browser
-    echo json_encode([
+    sendJson([
         'status' => 'success', 
         'html' => $html, 
         'nama_layanan' => $layanan['nama_layanan'], 
         'kategori' => $layanan['kategori'],
         'harga' => $layanan['harga']
     ]);
-    exit;
 }
 
 // 2. Ringkasan Data Layanan: Digunakan saat form pesanan memilih paket tertentu
@@ -100,11 +116,10 @@ if ($action === 'get_layanan_summary') {
     $layanan['harga_formatted'] = "Rp " . number_format($layanan['harga'], 0, ',', '.');
     $layanan['status_layanan'] = ucfirst($layanan['status_layanan']);
 
-    echo json_encode([
+    sendJson([
         'status' => 'success',
         'data' => $layanan
     ]);
-    exit;
 }
 
 // 3. Ambil Detail Pesanan: Mengambil relasi data pesanan, layanan, dan pelanggan untuk form edit
@@ -128,11 +143,10 @@ if ($action === 'get_detail') {
 
     if ($result && mysqli_num_rows($result) > 0) {
         $data = mysqli_fetch_assoc($result);
-        echo json_encode(['status' => 'success', 'data' => $data]);
+        sendJson(['status' => 'success', 'data' => $data]);
     } else {
         sendError('Data pesanan tidak ditemukan.');
     }
-    exit;
 }
 
 // 4. Tambah Pesanan Baru: Memproses input form pelanggan dan transaksi pemesanan
@@ -262,7 +276,7 @@ if ($action === 'create') {
         $nama_layanan = $lay_name_row ? $lay_name_row['nama_layanan'] : '';
 
         $_SESSION['success_message'] = "Pesanan dengan kode $kode_pesanan berhasil dicatat. Terima kasih.";
-        echo json_encode([
+        sendJson([
             'status' => 'success', 
             'message' => "Pesanan berhasil dicatat. Terima kasih.", 
             'kode' => $kode_pesanan,
@@ -280,7 +294,6 @@ if ($action === 'create') {
     } else {
         sendError('Gagal menambahkan pesanan ke database.');
     }
-    exit;
 }
 
 // 5. Update/Ubah Data Pesanan: Memperbarui isi pesanan yang sudah ada
@@ -374,11 +387,10 @@ if ($action === 'update') {
 
     if (mysqli_stmt_execute($stmt_up_p)) {
         $_SESSION['success_message'] = "Pesanan berhasil diperbarui.";
-        echo json_encode(['status' => 'success', 'message' => 'Pesanan berhasil diperbarui.']);
+        sendJson(['status' => 'success', 'message' => 'Pesanan berhasil diperbarui.']);
     } else {
         sendError('Gagal memperbarui data pesanan.');
     }
-    exit;
 }
 
 // 6. Hapus Data Pesanan: Menghapus data pesanan berdasarkan ID
@@ -393,16 +405,14 @@ if ($action === 'delete') {
     
     if (mysqli_stmt_execute($stmt_del)) {
         if (mysqli_stmt_affected_rows($stmt_del) > 0) {
-            if (ob_get_length()) ob_clean();
             $_SESSION['success_message'] = "Pesanan berhasil dihapus.";
-            echo json_encode(['status' => 'success', 'message' => 'Pesanan berhasil dihapus.']);
+            sendJson(['status' => 'success', 'message' => 'Pesanan berhasil dihapus.']);
         } else {
             sendError('Pesanan tidak ditemukan atau sudah dihapus sebelumnya.');
         }
     } else {
         sendError('Gagal menghapus pesanan dari database.');
     }
-    exit;
 }
 
 // Respons error jika dipanggil dengan aksi yang tidak didukung

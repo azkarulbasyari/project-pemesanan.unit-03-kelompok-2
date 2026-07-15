@@ -90,8 +90,6 @@ $timeline_query = mysqli_query($koneksi, "SELECT p.kode_pesanan, pl.nama_pelangg
                                         ORDER BY p.id DESC LIMIT 4");
 ?>
 
-<link href="assets/css/dashboard.css" rel="stylesheet">
-
 <div class="page-header mb-4">
     <div class="row align-items-center">
         <div class="col-md-7 col-sm-12">

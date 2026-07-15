@@ -24,8 +24,6 @@ $badge_color_map = [
 ];
 ?>
 
-<link href="assets/css/layanan.css" rel="stylesheet">
-
 <div class="page-header mb-4 text-white">
     <h2 class="fw-bold mb-2 text-white">Data Layanan</h2>
     <p class="text-white-50 mb-0">Daftar layanan berkualitas tinggi yang kami sediakan untuk Anda.</p>
