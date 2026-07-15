@@ -1,0 +1,74 @@
+/* Styling Halaman Katalog Layanan & Efek Kartu Minimal */
+.service-card-minimal {
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.015);
+    background: #ffffff;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+}
+
+.badge-category {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: inline-block;
+}
+.badge-tech { background-color: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+.badge-design { background-color: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
+.badge-consult { background-color: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
+.badge-hardware { background-color: #f0fdf4; color: #16a34a; border: 1px solid #d1fae5; }
+.badge-web { background-color: #faf5ff; color: #7c3aed; border: 1px solid #f3e8ff; }
+.badge-default { background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+
+@keyframes pulseGreen {
+    0% {
+        transform: scale(0.9);
+        box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.5);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(22, 163, 74, 0);
+    }
+    100% {
+        transform: scale(0.9);
+        box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+    }
+}
+
+.status-pulse-dot {
+    width: 7px;
+    height: 7px;
+    background-color: #16a34a;
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulseGreen 2s infinite;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.custom-filter-capsule {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #ffffff;
+}
+.custom-filter-capsule:hover {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.08), 0 8px 10px -6px rgba(59, 130, 246, 0.08) !important;
+    transform: translateY(-2px);
+}
+.custom-filter-capsule select:focus {
+    outline: none;
+    box-shadow: none;
+}
