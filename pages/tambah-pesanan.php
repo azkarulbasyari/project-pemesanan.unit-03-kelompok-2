@@ -18,8 +18,8 @@ if ($result_layanan) {
 
 <!-- Bagian 1: Header Halaman Tambah Pesanan -->
 <div class="page-header mb-4 text-white">
-    <h2 class="fw-bold mb-2 text-white">Tambah Pesanan Baru</h2>
-    <p class="text-white-50 mb-0">Isi data pelanggan dan layanan yang ingin dipesan dengan lengkap.</p>
+    <h2 class="fw-bold mb-2 text-white"><?php echo htmlspecialchars($page_config['heading'] ?? 'Tambah Pesanan'); ?></h2>
+    <p class="text-white-50 mb-0"><?php echo htmlspecialchars($page_config['subheading'] ?? 'Tambahkan data pesanan layanan baru.'); ?></p>
 </div>
 
 <!-- Bagian 2: Panel Info Ringkas Layanan (Akan otomatis muncul setelah paket layanan dipilih) -->

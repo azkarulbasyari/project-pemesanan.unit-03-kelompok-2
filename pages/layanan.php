@@ -25,8 +25,8 @@ $badge_color_map = [
 ?>
 
 <div class="page-header mb-4 text-white">
-    <h2 class="fw-bold mb-2 text-white">Data Layanan</h2>
-    <p class="text-white-50 mb-0">Daftar layanan berkualitas tinggi yang kami sediakan untuk Anda.</p>
+    <h2 class="fw-bold mb-2 text-white"><?php echo htmlspecialchars($page_config['heading'] ?? 'Data Layanan'); ?></h2>
+    <p class="text-white-50 mb-0"><?php echo htmlspecialchars($page_config['subheading'] ?? 'Kelola daftar layanan yang tersedia.'); ?></p>
 </div>
 
 <?php 

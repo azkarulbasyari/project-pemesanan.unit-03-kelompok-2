@@ -1,7 +1,7 @@
 <!-- Halaman Edit Pesanan (Sebagai Template Antarmuka Statis) -->
 <div class="page-header mb-4">
-    <h2 class="fw-bold mb-2">Edit Data Pesanan</h2>
-    <p class="mb-0">Perbarui data pesanan layanan pelanggan.</p>
+    <h2 class="fw-bold mb-2"><?php echo htmlspecialchars($page_config['heading'] ?? 'Edit Pesanan'); ?></h2>
+    <p class="mb-0"><?php echo htmlspecialchars($page_config['subheading'] ?? 'Perbarui data pesanan layanan pelanggan.'); ?></p>
 </div>
 
 <div class="card content-card">

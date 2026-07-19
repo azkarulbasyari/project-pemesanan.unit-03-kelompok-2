@@ -20,12 +20,12 @@ if ($res_lay) {
     <div class="row align-items-center">
         <div class="col-md-8">
             <h2 class="fw-bold mb-2 text-white">
-                Manajemen Pesanan 
+                <?php echo htmlspecialchars($page_config['heading'] ?? 'Manajemen Pesanan'); ?> 
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] !== 'admin'): ?>
-                    <span class="badge ms-2" style="font-size: 0.72rem; vertical-align: middle; background: rgba(239, 68, 68, 0.25); color: #fecaca; border: 1px solid rgba(239, 68, 68, 0.4); letter-spacing: 0.03em;"><i class="bi bi-shield-lock-fill me-1"></i> Area Khusus Admin</span>
+                    <span class="badge ms-2" style="font-size: 0.72rem; vertical-align: middle; background: rgba(59, 130, 246, 0.25); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.4); letter-spacing: 0.03em;"><i class="bi bi-person-badge me-1"></i> Mode Pengguna</span>
                 <?php endif; ?>
             </h2>
-            <p class="mb-0">Kelola pesanan layanan pelanggan secara mudah dan terstruktur.</p>
+            <p class="mb-0"><?php echo htmlspecialchars($page_config['subheading'] ?? 'Kelola seluruh data pesanan layanan pelanggan.'); ?></p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
             <button class="btn btn-light rounded-3 fw-semibold" id="btnTambahPesananManualTrigger">
@@ -34,24 +34,6 @@ if ($res_lay) {
         </div>
     </div>
 </div>
-
-<?php if (isset($_SESSION['success_message'])): ?>
-    <div class="alert alert-success border mb-3 alert-dismissible fade show" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i>
-        <?php echo $_SESSION['success_message']; ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    <?php unset($_SESSION['success_message']); ?>
-<?php endif; ?>
-
-<?php if (isset($_SESSION['error_message'])): ?>
-    <div class="alert alert-danger border mb-3 alert-dismissible fade show" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-        <?php echo $_SESSION['error_message']; ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    <?php unset($_SESSION['error_message']); ?>
-<?php endif; ?>
 
 <?php if (isset($_SESSION['role']) && $_SESSION['role'] !== 'admin'): ?>
 <div class="card border-0 rounded-4 mb-4" style="background: rgba(239, 68, 68, 0.04); border-left: 5px solid #ef4444 !important; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.05);">

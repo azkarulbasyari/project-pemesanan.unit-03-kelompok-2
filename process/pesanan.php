@@ -285,10 +285,10 @@ if ($action === 'create') {
         $lay_name_row = mysqli_fetch_assoc($res_lay_name);
         $nama_layanan = $lay_name_row ? $lay_name_row['nama_layanan'] : '';
 
-        $_SESSION['success_message'] = "Pesanan dengan kode $kode_pesanan berhasil dicatat. Terima kasih.";
+        $_SESSION['success_message'] = "Pesanan dengan kode $kode_pesanan berhasil dicatat.";
         sendJson([
             'status' => 'success', 
-            'message' => "Pesanan berhasil dicatat. Terima kasih.", 
+            'message' => "Pesanan dengan kode $kode_pesanan berhasil dicatat.", 
             'kode' => $kode_pesanan,
             'data' => [
                 'id' => $new_id,
@@ -356,26 +356,81 @@ if ($action === 'update') {
         sendError('Status pesanan tidak valid.');
     }
 
-    // Pengecekan / sinkronisasi data pelanggan seperti pada proses insert
+    // 1. Ambil pelanggan_id lama yang terhubung dengan pesanan ini sebelum diedit
+    $old_pelanggan_id = 0;
+    $stmt_old_p = mysqli_prepare($koneksi, "SELECT pelanggan_id FROM pesanan WHERE id = ? LIMIT 1");
+    mysqli_stmt_bind_param($stmt_old_p, "i", $id);
+    mysqli_stmt_execute($stmt_old_p);
+    $res_old_p = mysqli_stmt_get_result($stmt_old_p);
+    if ($res_old_p && $row_old_p = mysqli_fetch_assoc($res_old_p)) {
+        $old_pelanggan_id = intval($row_old_p['pelanggan_id']);
+    }
+
+    // 2. Hitung berapa pesanan lain yang dimiliki oleh pelanggan lama ini
+    $other_orders_count = 0;
+    if ($old_pelanggan_id > 0) {
+        $stmt_cnt = mysqli_prepare($koneksi, "SELECT COUNT(*) as total FROM pesanan WHERE pelanggan_id = ? AND id != ?");
+        mysqli_stmt_bind_param($stmt_cnt, "ii", $old_pelanggan_id, $id);
+        mysqli_stmt_execute($stmt_cnt);
+        $res_cnt = mysqli_stmt_get_result($stmt_cnt);
+        if ($res_cnt && $row_cnt = mysqli_fetch_assoc($res_cnt)) {
+            $other_orders_count = intval($row_cnt['total']);
+        }
+    }
+
+    $pelanggan_id = 0;
+
+    // Cek apakah ada pelanggan lain di database yang SUDAH MEMILIKI nama baru ini
     $stmt_check = mysqli_prepare($koneksi, "SELECT id FROM pelanggan WHERE LOWER(nama_pelanggan) = LOWER(?) LIMIT 1");
     mysqli_stmt_bind_param($stmt_check, "s", $nama_pelanggan);
     mysqli_stmt_execute($stmt_check);
     $res_check = mysqli_stmt_get_result($stmt_check);
 
     if ($res_check && mysqli_num_rows($res_check) > 0) {
+        // Jika nama yang dimasukkan cocok dengan pelanggan lain yang terdaftar:
         $pelanggan_row = mysqli_fetch_assoc($res_check);
         $pelanggan_id = intval($pelanggan_row['id']);
 
+        // Update data kontak pelanggan tersebut
         $stmt_up_cust = mysqli_prepare($koneksi, "UPDATE pelanggan SET no_hp = ?, email = ?, alamat = ? WHERE id = ?");
         mysqli_stmt_bind_param($stmt_up_cust, "sssi", $no_hp, $email, $alamat, $pelanggan_id);
         mysqli_stmt_execute($stmt_up_cust);
     } else {
-        $stmt_ins_cust = mysqli_prepare($koneksi, "INSERT INTO pelanggan (nama_pelanggan, no_hp, email, alamat) VALUES (?, ?, ?, ?)");
-        mysqli_stmt_bind_param($stmt_ins_cust, "ssss", $nama_pelanggan, $no_hp, $email, $alamat);
-        if (mysqli_stmt_execute($stmt_ins_cust)) {
-            $pelanggan_id = mysqli_insert_id($koneksi);
+        // Jika nama baru belum terdaftar di pelanggan lain:
+        if ($old_pelanggan_id > 0 && $other_orders_count === 0) {
+            // Pelanggan lama HANYA punya 1 pesanan ini.
+            // Langsung UPDATE nama dan kontak pada ID pelanggan yang sama di database (tidak membuat baris baru)!
+            $stmt_up_cust = mysqli_prepare($koneksi, "UPDATE pelanggan SET nama_pelanggan = ?, no_hp = ?, email = ?, alamat = ? WHERE id = ?");
+            mysqli_stmt_bind_param($stmt_up_cust, "ssssi", $nama_pelanggan, $no_hp, $email, $alamat, $old_pelanggan_id);
+            if (mysqli_stmt_execute($stmt_up_cust)) {
+                $pelanggan_id = $old_pelanggan_id;
+            } else {
+                sendError('Gagal memperbarui data pelanggan.');
+            }
         } else {
-            sendError('Gagal menyimpan data pelanggan.');
+            // Jika pelanggan lama punya pesanan lain, buat record pelanggan baru untuk nama ini
+            $stmt_ins_cust = mysqli_prepare($koneksi, "INSERT INTO pelanggan (nama_pelanggan, no_hp, email, alamat) VALUES (?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt_ins_cust, "ssss", $nama_pelanggan, $no_hp, $email, $alamat);
+            if (mysqli_stmt_execute($stmt_ins_cust)) {
+                $pelanggan_id = mysqli_insert_id($koneksi);
+            } else {
+                sendError('Gagal menyimpan data pelanggan.');
+            }
+        }
+    }
+
+    // Bersihkan pelanggan lama jika sudah tidak memiliki pesanan lagi sama sekali (orphaned record cleanup)
+    if ($old_pelanggan_id > 0 && $old_pelanggan_id !== $pelanggan_id) {
+        $stmt_chk_rem = mysqli_prepare($koneksi, "SELECT COUNT(*) as total FROM pesanan WHERE pelanggan_id = ? AND id != ?");
+        mysqli_stmt_bind_param($stmt_chk_rem, "ii", $old_pelanggan_id, $id);
+        mysqli_stmt_execute($stmt_chk_rem);
+        $res_chk_rem = mysqli_stmt_get_result($stmt_chk_rem);
+        $rem_count = ($res_chk_rem && $row_rem = mysqli_fetch_assoc($res_chk_rem)) ? intval($row_rem['total']) : 0;
+
+        if ($rem_count === 0) {
+            $stmt_del_orphan = mysqli_prepare($koneksi, "DELETE FROM pelanggan WHERE id = ?");
+            mysqli_stmt_bind_param($stmt_del_orphan, "i", $old_pelanggan_id);
+            mysqli_stmt_execute($stmt_del_orphan);
         }
     }
 
@@ -396,7 +451,6 @@ if ($action === 'update') {
     mysqli_stmt_bind_param($stmt_up_p, "iisssdsi", $pelanggan_id, $layanan_id, $tanggal_pesan, $tanggal_selesai_val, $catatan, $total_harga, $status_pesanan, $id);
 
     if (mysqli_stmt_execute($stmt_up_p)) {
-        $_SESSION['success_message'] = "Pesanan berhasil diperbarui.";
         sendJson(['status' => 'success', 'message' => 'Pesanan berhasil diperbarui.']);
     } else {
         sendError('Gagal memperbarui data pesanan.');
@@ -443,7 +497,6 @@ if ($action === 'delete') {
                 }
             }
 
-            $_SESSION['success_message'] = "Pesanan berhasil dihapus.";
             sendJson(['status' => 'success', 'message' => 'Pesanan berhasil dihapus.']);
         } else {
             sendError('Pesanan tidak ditemukan atau sudah dihapus sebelumnya.');

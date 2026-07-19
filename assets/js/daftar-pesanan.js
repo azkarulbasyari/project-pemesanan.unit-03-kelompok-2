@@ -2,12 +2,8 @@ document.addEventListener("DOMContentLoaded", function () {
     let tabelPesanan = null;
     const userRole = $('#pesanan-metadata').data('user-role');
 
-    // Aksi ketika tombol tambah pesanan diklik
+    // Aksi ketika tombol tambah pesanan diklik (Dapat diakses oleh semua role user)
     $('#btnTambahPesananManualTrigger').on('click', function () {
-        if (userRole !== 'admin') {
-            $('#modalAksesTerbatas').modal('show');
-            return;
-        }
         $('#modalTambahPesananManual').modal('show');
     });
 
@@ -168,8 +164,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Tutup modal tambah pesanan
                     $('#modalTambahPesananManual').modal('hide');
 
-                    // Tampilkan notifikasi sukses
-                    showToast('success', 'Pesanan berhasil dicatat.');
+                    // Tampilkan notifikasi sukses melayang tanpa refresh
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('success', response.message || 'Pesanan berhasil dicatat.');
+                    }
 
                     const data = response.data;
 
@@ -359,8 +357,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Tutup modal edit
                     $('#modalUbahPesanan').modal('hide');
 
-                    // Tampilkan notifikasi sukses
-                    showToast('success', 'Pesanan berhasil diperbarui.');
+                    // Tampilkan notifikasi sukses melayang tanpa refresh
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('success', response.message || 'Pesanan berhasil diperbarui.');
+                    }
 
                     // Format ulang tanggal dan harga agar rapi di tabel
                     const formattedDate = dateStr => {
@@ -428,8 +428,10 @@ document.addEventListener("DOMContentLoaded", function () {
                         // Sembunyikan modal
                         $('#modalKonfirmasiHapus').modal('hide');
 
-                        // Tampilkan notifikasi sukses
-                        showToast('success', 'Pesanan berhasil dihapus.');
+                        // Tampilkan notifikasi sukses melayang tanpa refresh
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('success', response.message || 'Pesanan berhasil dihapus.');
+                        }
 
                         // Hapus baris tabel dengan efek menghilang secara halus
                         $(barisYangAkanDihapus).fadeOut(400, function () {

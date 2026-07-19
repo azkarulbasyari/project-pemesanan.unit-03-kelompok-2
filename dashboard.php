@@ -14,35 +14,47 @@ require_once 'config/koneksi.php';
 // Ambil parameter halaman (?page=...) dari URL, default-nya ke 'dashboard'
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
 
-// Daftar halaman resmi (routing) yang diizinkan untuk diakses di dalam panel admin
+// Daftar halaman resmi (routing) yang diizinkan untuk diakses di dalam panel admin beserta judul & subjudul dinamis
 $allowed_pages = [
     'dashboard' => [
         'title' => 'Dashboard Pemesanan Layanan',
+        'heading' => 'Dashboard',
+        'subheading' => 'Ringkasan informasi dan aktivitas sistem.',
         'sidebar' => true,
         'file' => 'pages/dashboard.php'
     ],
     'pesanan' => [
         'title' => 'Manajemen Pesanan',
+        'heading' => 'Manajemen Pesanan',
+        'subheading' => 'Kelola seluruh data pesanan layanan pelanggan.',
         'sidebar' => true,
         'file' => 'pages/daftar-pesanan.php'
     ],
     'pesanan-tambah' => [
         'title' => 'Tambah Pesanan',
+        'heading' => 'Tambah Pesanan',
+        'subheading' => 'Tambahkan data pesanan layanan baru.',
         'sidebar' => true,
         'file' => 'pages/tambah-pesanan.php'
     ],
     'layanan' => [
         'title' => 'Data Layanan',
+        'heading' => 'Data Layanan',
+        'subheading' => 'Kelola daftar layanan yang tersedia.',
         'sidebar' => true,
         'file' => 'pages/layanan.php'
     ],
     'pesanan-edit' => [
         'title' => 'Edit Pesanan',
+        'heading' => 'Edit Pesanan',
+        'subheading' => 'Perbarui data pesanan layanan pelanggan.',
         'sidebar' => true,
         'file' => 'pages/edit-pesanan.php'
     ],
     'pesanan-hapus' => [
         'title' => 'Hapus Pesanan',
+        'heading' => 'Hapus Pesanan',
+        'subheading' => 'Konfirmasi penghapusan data pesanan.',
         'sidebar' => false,
         'file' => 'pages/hapus-pesanan.php'
     ]
@@ -84,15 +96,13 @@ $page_config = $allowed_pages[$page];
 
     <!-- Pengkondisian layout: me-render sidebar jika halaman mewajibkannya -->
     <?php if ($page_config['sidebar']): ?>
-        <div class="container-fluid">
-            <div class="row">
-                <!-- Sertakan komponen navigasi sidebar -->
-                <?php include 'includes/sidebar.php'; ?>
+        <div class="app-layout" id="appLayout">
+            <!-- Sertakan komponen navigasi sidebar -->
+            <?php include 'includes/sidebar.php'; ?>
 
-                <!-- Bagian wadah konten halaman aktif -->
-                <div class="col-lg-10 col-md-9 main-content">
-                    <?php include $page_config['file']; ?>
-                </div>
+            <!-- Bagian wadah konten halaman aktif -->
+            <div class="main-content">
+                <?php include $page_config['file']; ?>
             </div>
         </div>
     <?php else: ?>
@@ -106,5 +116,37 @@ $page_config = $allowed_pages[$page];
     <!-- Sertakan toast notifier untuk memunculkan notifikasi melayang -->
     <?php include 'includes/toast.php'; ?>
 
+    <script>
+        // Skrip Kontrol Toggle Collapsible Sidebar (Slide Ke Samping) dengan Persistence localStorage
+        (function() {
+            const appLayout = document.getElementById('appLayout');
+            if (!appLayout) return;
+
+            const toggleBtn = document.querySelector('.btn-sidebar-toggle-handle');
+
+            // Memuat status terlipat yang tersimpan dari localStorage browser
+            const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+            if (isCollapsed) {
+                appLayout.classList.add('sidebar-collapsed');
+                if (toggleBtn) toggleBtn.setAttribute('title', 'Tampilkan Sidebar');
+            } else {
+                if (toggleBtn) toggleBtn.setAttribute('title', 'Sembunyikan Sidebar');
+            }
+
+            // Event listener klik tombol toggle sidebar
+            document.addEventListener('click', function(e) {
+                const targetBtn = e.target.closest('.btn-toggle-sidebar');
+                if (targetBtn) {
+                    e.preventDefault();
+                    appLayout.classList.toggle('sidebar-collapsed');
+                    const collapsedState = appLayout.classList.contains('sidebar-collapsed');
+                    localStorage.setItem('sidebar_collapsed', collapsedState ? 'true' : 'false');
+                    
+                    // Pembaruan teks tooltip secara otomatis
+                    targetBtn.setAttribute('title', collapsedState ? 'Tampilkan Sidebar' : 'Sembunyikan Sidebar');
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -140,51 +140,29 @@ document.addEventListener("DOMContentLoaded", function() {
             url: 'process/pesanan.php?action=create',
             type: 'POST',
             data: $(this).serialize(),
-            dataType: 'text',
-            success: function(rawResponse, textStatus, xhr) {
+            dataType: 'json',
+            success: function(response) {
                 btnSubmit.prop('disabled', false).html('<i class="bi bi-save me-1"></i>Simpan Pesanan');
 
-                const contentType = (xhr.getResponseHeader('content-type') || '').toLowerCase();
-                const responseText = typeof rawResponse === 'string' ? rawResponse : '';
-                let response = null;
-
-                if (contentType.includes('application/json')) {
-                    try {
-                        response = JSON.parse(responseText);
-                    } catch (e) {
-                        showAlert('#alertPlaceholder', 'danger', 'Respons server tidak valid. Silakan coba lagi.');
-                        return;
-                    }
-                } else {
-                    showAlert('#alertPlaceholder', 'danger', 'Respons server tidak valid. Silakan coba lagi.');
-                    return;
-                }
-
                 if (response && response.status === 'success') {
-                    // Alihkan halaman ke dashboard utama saat penyimpanan pesanan berhasil
-                    window.location.href = 'dashboard.php?page=dashboard';
+                    // Simpan pesan sementara ke sessionStorage agar ditampilkan 1x saat pindah halaman
+                    sessionStorage.setItem('pending_toast_message', response.message || 'Pesanan berhasil dicatat.');
+                    // Alihkan halaman ke manajemen pesanan saat penyimpanan pesanan berhasil
+                    window.location.href = 'dashboard.php?page=pesanan';
                 } else {
                     showAlert('#alertPlaceholder', 'danger', response && response.message ? response.message : 'Terjadi kesalahan saat menyimpan pesanan.');
                 }
             },
             error: function(xhr, status, error) {
                 btnSubmit.prop('disabled', false).html('<i class="bi bi-save me-1"></i>Simpan Pesanan');
-                const responseText = xhr.responseText || '';
                 let message = 'Terjadi kesalahan sistem saat mengirim data.';
-                if (responseText) {
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                } else if (xhr.responseText) {
                     try {
-                        const parsed = JSON.parse(responseText);
-                        if (parsed && parsed.message) {
-                            message = parsed.message;
-                        }
-                    } catch (e) {
-                        const contentType = (xhr.getResponseHeader('content-type') || '').toLowerCase();
-                        if (contentType.includes('application/json')) {
-                            message = 'Respons server tidak valid. Silakan coba lagi.';
-                        } else {
-                            message = 'Terjadi kesalahan sistem saat mengirim data.';
-                        }
-                    }
+                        const parsed = JSON.parse(xhr.responseText);
+                        if (parsed && parsed.message) message = parsed.message;
+                    } catch (e) {}
                 }
                 showAlert('#alertPlaceholder', 'danger', message);
             }

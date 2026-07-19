@@ -1,5 +1,5 @@
 <!-- Wadah toast notifikasi melayang di pojok kanan bawah -->
-<div class="toast-container position-fixed bottom-0 end-0 p-4" style="z-index: 1100;">
+<div class="toast-container position-fixed bottom-0 end-0 p-4" style="z-index: 1150;">
     <div id="globalToast" class="toast custom-premium-toast border-0 position-relative animate-card" role="alert" aria-live="assertive" aria-atomic="true">
         <!-- Bar vertikal penanda warna di sisi kiri toast -->
         <div id="toastAccentBar" class="toast-accent-bar"></div>
@@ -24,14 +24,16 @@
 
 <!-- Helper Javascript untuk menampilkan toast notification secara dinamis -->
 <script>
-    function showToast(type, message) {
-        // Mengambil seluruh elemen DOM toast
+    // Ekspos fungsi showToast ke window object agar dapat dipanggil dari skrip AJAX mana pun tanpa refresh
+    window.showToast = function(type, message) {
         const toastEl = document.getElementById('globalToast');
         const toastMessage = document.getElementById('toastMessage');
         const toastIcon = document.getElementById('toastIcon');
         const toastIconWrapper = document.getElementById('toastIconWrapper');
         const toastAccentBar = document.getElementById('toastAccentBar');
         const toastTitle = document.getElementById('toastTitle');
+        
+        if (!toastEl || !toastMessage || !toastIcon || !toastIconWrapper || !toastAccentBar || !toastTitle) return;
         
         // Reset kelas kustom sebelumnya agar tidak bertumpuk
         toastIconWrapper.className = 'toast-icon-wrapper me-3';
@@ -67,16 +69,57 @@
         // Mengisi teks pesan detail ke dalam elemen notifikasi
         toastMessage.textContent = message;
         
-        // Inisialisasi dan memicu pemunculan komponen toast Bootstrap dengan durasi tampil 4 detik
-        const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
-        toast.show();
-    }
+        // Inisialisasi komponen Toast Bootstrap dengan autohide: true dan durasi tepat 5 detik (5000 ms)
+        if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+            // Hapus instansi sebelumnya jika ada untuk memperbarui timer 5 detik secara bersih
+            const oldInstance = bootstrap.Toast.getInstance(toastEl);
+            if (oldInstance) {
+                oldInstance.dispose();
+            }
 
-    <?php if (isset($_SESSION['success_message'])): ?>
-        // Otomatis menampilkan toast notifikasi jika session flash sukses diset oleh server PHP
-        document.addEventListener("DOMContentLoaded", function() {
-            showToast("success", "<?php echo addslashes($_SESSION['success_message']); ?>");
-        });
-        <?php unset($_SESSION['success_message']); ?>
-    <?php endif; ?>
+            const toast = new bootstrap.Toast(toastEl, {
+                autohide: true,
+                delay: 5000
+            });
+            toast.show();
+        } else {
+            // Fallback manual jika library Bootstrap JS belum terinisialisasi
+            toastEl.classList.add('show');
+            if (window.toastTimeoutHandle) clearTimeout(window.toastTimeoutHandle);
+            window.toastTimeoutHandle = setTimeout(function() {
+                toastEl.classList.remove('show');
+            }, 5000);
+        }
+    };
+
+    // Otomatis menampilkan toast notifikasi jika terdapat pesan session dari server PHP atau sessionStorage
+    document.addEventListener("DOMContentLoaded", function() {
+        // Cek notifikasi pending dari sessionStorage (tampil 1x lalu langsung dihapus)
+        const pendingToastMessage = sessionStorage.getItem('pending_toast_message');
+        if (pendingToastMessage) {
+            sessionStorage.removeItem('pending_toast_message');
+            window.showToast("success", pendingToastMessage);
+            return;
+        }
+
+        <?php if (isset($_SESSION['success_message'])): ?>
+            window.showToast("success", "<?php echo addslashes($_SESSION['success_message']); ?>");
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error_message'])): ?>
+            window.showToast("danger", "<?php echo addslashes($_SESSION['error_message']); ?>");
+            <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['warning_message'])): ?>
+            window.showToast("warning", "<?php echo addslashes($_SESSION['warning_message']); ?>");
+            <?php unset($_SESSION['warning_message']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['info_message'])): ?>
+            window.showToast("info", "<?php echo addslashes($_SESSION['info_message']); ?>");
+            <?php unset($_SESSION['info_message']); ?>
+        <?php endif; ?>
+    });
 </script>

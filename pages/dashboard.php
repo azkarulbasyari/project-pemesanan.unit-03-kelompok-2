@@ -94,8 +94,8 @@ $timeline_query = mysqli_query($koneksi, "SELECT p.kode_pesanan, pl.nama_pelangg
     <div class="row align-items-center">
         <div class="col-md-7 col-sm-12">
             <small class="text-white-50 text-uppercase fw-bold" style="font-size: 0.72rem; letter-spacing: 0.05em;">Panel Kendali Utama</small>
-            <h2 class="fw-bold mb-1"><?php echo $greeting; ?>, <?php echo htmlspecialchars($_SESSION['nama_lengkap'] ?? 'Admin'); ?>!</h2>
-            <p class="mb-0 text-white-50">Selamat datang kembali. Dashboard ini dirancang untuk membantu Anda mengelola pesanan pelanggan, memantau progres pengerjaan, serta memperoleh gambaran menyeluruh mengenai aktivitas layanan secara real-time.</p>
+            <h2 class="fw-bold mb-1"><?php echo htmlspecialchars($page_config['heading'] ?? 'Dashboard'); ?></h2>
+            <p class="mb-0 text-white-50"><?php echo htmlspecialchars($page_config['subheading'] ?? 'Ringkasan informasi dan aktivitas sistem.'); ?></p>
         </div>
         <div class="col-md-5 col-sm-12 text-md-end mt-3 mt-md-0">
             <span class="badge bg-success-soft text-success px-3 py-2 rounded-pill me-2 border border-success-subtle">
