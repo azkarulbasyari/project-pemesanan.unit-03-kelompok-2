@@ -53,3 +53,9 @@
 .content-card:hover {
     box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
 }
+
+/* MEMASTIKAN TABEL 5 TRANSAKSI TERBARU DI DASHBOARD TAMPIL LURUS 1 BARIS (TIDAK PATAH/TURUN KE BAWAH) */
+.table-responsive .table td,
+.table-responsive .table th {
+    white-space: nowrap !important;
+}

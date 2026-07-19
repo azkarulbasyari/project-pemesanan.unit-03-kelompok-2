@@ -130,43 +130,87 @@ body {
     box-shadow: var(--card-shadow);
 }
 
+/* STYLING TABEL MANAJEMEN PESANAN */
+
 .table thead th {
-    background: #f1f5f9;
-    color: #334155;
-    font-size: 14px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.8rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
+    padding: 14px 16px;
+    border-bottom: 2px solid #e2e8f0;
 }
 
-.table td,
-.table th {
+.table td {
+    padding: 14px 16px;
     vertical-align: middle;
+    color: #1e293b;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background-color 0.2s ease;
 }
 
+.table tbody tr:hover td {
+    background-color: #f8fafc !important;
+}
+
+/* MEMASTIKAN TEKS KODE PESANAN SELALU LURUS SATU BARIS (TIDAK TURUN KE BAWAH) */
+.col-kode-pesanan,
+#tabelPesanan td:nth-child(2),
+#tabelPesanan th:nth-child(2) {
+    white-space: nowrap !important;
+}
+
+/* STYLING BADGE STATUS PESANAN */
 .badge-status {
-    padding: 8px 12px;
-    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 95px;
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.78rem;
     font-weight: 600;
+    text-align: center;
+    letter-spacing: 0.02em;
 }
 
 .status-baru {
-    background: #dbeafe;
+    background-color: #dbeafe;
     color: #1d4ed8;
 }
 
 .status-diproses {
-    background: #fef3c7;
+    background-color: #fef3c7;
     color: #b45309;
 }
 
 .status-selesai {
-    background: #dcfce7;
+    background-color: #dcfce7;
     color: #15803d;
 }
 
 .status-dibatalkan {
-    background: #fee2e2;
+    background-color: #fee2e2;
     color: #b91c1c;
+}
+
+/* STYLING BADGE SUMBER PESANAN */
+.badge-sumber {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 100px;
+    padding: 5px 12px;
+    border-radius: 50px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    background-color: #f8fafc;
+    color: #334155;
+    border: 1px solid #e2e8f0;
 }
 
 .form-control,
@@ -198,9 +242,121 @@ body {
     border-color: var(--primary-dark);
 }
 
+/* STYLING TOMBOL AKSI EDIT DAN HAPUS */
 .action-btn {
-    padding: 7px 10px;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* STYLING DATATABLES LENGTH MENU DAN SEARCH BOX */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 1.25rem;
+}
+
+.dataTables_wrapper .dataTables_length label,
+.dataTables_wrapper .dataTables_filter label {
+    font-size: 0.875rem;
+    color: #475569;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    height: 38px;
+    min-width: 78px;
     border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    padding: 4px 28px 4px 14px !important;
+    margin: 0 8px !important;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0f172a;
+    background-color: #ffffff;
+    cursor: pointer;
+    display: inline-block;
+    vertical-align: middle;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    padding: 6px 14px;
+    margin-left: 8px !important;
+    font-size: 0.875rem;
+    color: #0f172a;
+    background-color: #ffffff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dataTables_wrapper .dataTables_length select:focus,
+.dataTables_wrapper .dataTables_filter input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* STYLING DATATABLES INFO DAN PAGINATION */
+.dataTables_wrapper .dataTables_info {
+    font-size: 0.875rem;
+    color: #64748b;
+    padding-top: 1rem;
+}
+
+.dataTables_wrapper .dataTables_paginate {
+    padding-top: 0.75rem;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border-radius: 8px !important;
+    padding: 6px 14px !important;
+    margin: 0 3px !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    transition: all 0.2s ease !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled) {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    border-color: #bfdbfe !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25) !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+    opacity: 0.5;
+    background: #f8fafc !important;
+    color: #94a3b8 !important;
+    border-color: #e2e8f0 !important;
+    cursor: not-allowed !important;
 }
 
 .service-card {

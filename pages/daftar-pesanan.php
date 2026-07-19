@@ -123,16 +123,16 @@ if ($res_lay) {
                             $sumber_val = isset($row['sumber_pesanan']) ? $row['sumber_pesanan'] : 'online';
                             $sumber_badge = '';
                             if ($sumber_val === 'telepon') {
-                                $sumber_badge = '<span class="badge bg-light text-dark border rounded-pill px-2.5 py-1.5" style="font-size: 0.75rem;"><i class="bi bi-telephone-fill me-1 text-success"></i> ☎️ Telepon</span>';
+                                $sumber_badge = '<span class="badge-sumber"><i class="bi bi-telephone-fill text-success"></i> Telepon</span>';
                             } elseif ($sumber_val === 'walk_in') {
-                                $sumber_badge = '<span class="badge bg-light text-dark border rounded-pill px-2.5 py-1.5" style="font-size: 0.75rem;"><i class="bi bi-person-fill me-1 text-info"></i> 🚶 Walk In</span>';
+                                $sumber_badge = '<span class="badge-sumber"><i class="bi bi-person-fill text-info"></i> Walk In</span>';
                             } else {
-                                $sumber_badge = '<span class="badge bg-light text-dark border rounded-pill px-2.5 py-1.5" style="font-size: 0.75rem;"><i class="bi bi-globe me-1 text-primary"></i> 🌐 Online</span>';
+                                $sumber_badge = '<span class="badge-sumber"><i class="bi bi-globe text-primary"></i> Online</span>';
                             }
                             ?>
                             <tr data-id="<?php echo $row['id']; ?>">
                                 <td><?php echo $no++; ?></td>
-                                <td><strong><?php echo htmlspecialchars($row['kode_pesanan']); ?></strong></td>
+                                <td class="col-kode-pesanan text-nowrap"><strong><?php echo htmlspecialchars($row['kode_pesanan']); ?></strong></td>
                                 <td class="col-nama-pelanggan"><?php echo htmlspecialchars($row['nama_pelanggan']); ?></td>
                                 <td class="col-nama-layanan"><?php echo htmlspecialchars($row['nama_layanan']); ?></td>
                                 <td class="col-tanggal-pesan"><?php echo $formatted_date; ?></td>
@@ -141,14 +141,16 @@ if ($res_lay) {
                                 <td class="col-status-pesanan">
                                     <span class="badge-status <?php echo $status_class; ?>"><?php echo ucfirst(htmlspecialchars($row['status_pesanan'])); ?></span>
                                 </td>
-                                <!-- Tombol aksi ubah dan hapus data pesanan -->
+                                <!-- Tombol aksi ubah dan hapus data pesanan (dibuat sejajar) -->
                                 <td class="text-center">
-                                    <button class="btn btn-sm btn-outline-primary action-btn edit-btn" data-id="<?php echo $row['id']; ?>" title="Edit Pesanan">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger action-btn delete-btn" data-id="<?php echo $row['id']; ?>" data-kode="<?php echo htmlspecialchars($row['kode_pesanan']); ?>" title="Hapus Pesanan">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+                                    <div class="d-flex justify-content-center gap-1">
+                                        <button class="btn btn-sm btn-outline-primary action-btn edit-btn" data-id="<?php echo $row['id']; ?>" title="Edit Pesanan">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger action-btn delete-btn" data-id="<?php echo $row['id']; ?>" data-kode="<?php echo htmlspecialchars($row['kode_pesanan']); ?>" title="Hapus Pesanan">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             <?php
@@ -440,4 +442,4 @@ if ($res_lay) {
 
 <div id="pesanan-metadata" class="d-none" data-user-role="<?php echo $_SESSION['role']; ?>"></div>
 
-<script src="assets/js/daftar-pesanan.js?v=20260715"></script>
+<script src="assets/js/daftar-pesanan.js?v=<?php echo time(); ?>"></script>

@@ -11,9 +11,25 @@ $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $delete_id = isset($_POST['id']) ? intval($_POST['id']) : 0;
     if ($delete_id > 0) {
+        // Ambil pelanggan_id terlebih dahulu
+        $res_cust = mysqli_query($koneksi, "SELECT pelanggan_id FROM pesanan WHERE id = $delete_id LIMIT 1");
+        $pelanggan_id = 0;
+        if ($res_cust && $row_c = mysqli_fetch_assoc($res_cust)) {
+            $pelanggan_id = intval($row_c['pelanggan_id']);
+        }
+
         // Jalankan query DELETE untuk menghapus baris data transaksi
         $delete_query = mysqli_query($koneksi, "DELETE FROM pesanan WHERE id = $delete_id");
         if ($delete_query) {
+            // Hapus data pelanggan jika tidak memiliki pesanan lain di database
+            if ($pelanggan_id > 0) {
+                $res_chk = mysqli_query($koneksi, "SELECT COUNT(*) as count FROM pesanan WHERE pelanggan_id = $pelanggan_id");
+                if ($res_chk && $row_r = mysqli_fetch_assoc($res_chk)) {
+                    if (intval($row_r['count']) === 0) {
+                        mysqli_query($koneksi, "DELETE FROM pelanggan WHERE id = $pelanggan_id");
+                    }
+                }
+            }
             $_SESSION['success_message'] = "Pesanan berhasil dihapus.";
         } else {
             $_SESSION['error_message'] = "Gagal menghapus pesanan: " . mysqli_error($koneksi);

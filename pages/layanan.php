@@ -29,31 +29,65 @@ $badge_color_map = [
     <p class="text-white-50 mb-0">Daftar layanan berkualitas tinggi yang kami sediakan untuk Anda.</p>
 </div>
 
-<div class="d-flex justify-content-center mb-5 animate-card" style="animation-delay: 0.05s;">
-    <div class="position-relative" style="min-width: 290px; max-width: 400px; width: 100%;">
-        <div class="custom-filter-capsule shadow-sm d-flex align-items-center px-3 py-2 bg-white rounded-pill border" style="border-color: #cbd5e1 !important; transition: all 0.3s ease;">
-            <span class="text-primary me-2 d-flex align-items-center justify-content-center" style="font-size: 1.15rem; width: 32px; height: 32px; background: #eff6ff; border-radius: 50%;">
-                <i class="bi bi-funnel-fill"></i>
+<?php 
+// Logika mengelompokkan kategori unik (unique) dari list layanan untuk opsi filter dropdown kustom
+$kategori_list = [];
+foreach ($layanan_list as $l) {
+    if (!in_array($l['kategori'], $kategori_list)) {
+        $kategori_list[] = $l['kategori'];
+    }
+}
+?>
+
+<div class="d-flex flex-column align-items-center mb-5 animate-card" style="animation-delay: 0.05s;">
+    <!-- Komponen Dropdown Filter Kategori Estetik Kustom -->
+    <div class="custom-dropdown-container position-relative" style="min-width: 310px; max-width: 420px; width: 100%;">
+        <!-- Input tersembunyi untuk menjaga kompatibilitas dengan logika filter JS -->
+        <input type="hidden" id="filterKategori" value="">
+        
+        <!-- Kapsul Pemicu Dropdown -->
+        <div class="custom-filter-capsule shadow-sm d-flex align-items-center px-3.5 py-2.5 bg-white rounded-pill border" id="customFilterTrigger">
+            <span class="filter-icon-box text-primary me-3 d-flex align-items-center justify-content-center" style="font-size: 1.15rem; width: 36px; height: 36px; background: linear-gradient(135deg, #eff6ff, #dbeafe); border-radius: 50%; color: #2563eb;">
+                <i class="bi bi-sliders2-vertical"></i>
             </span>
-            <div class="flex-grow-1">
-                <label class="d-block text-muted text-uppercase fw-bold" style="font-size: 0.58rem; letter-spacing: 0.08em; margin-bottom: 1px;">Kategori Layanan</label>
-                <select id="filterKategori" class="form-select border-0 p-0 fw-semibold text-dark" style="font-size: 0.88rem; background-image: none; box-shadow: none; cursor: pointer; background: transparent;">
-                    <option value="" style="font-weight: 600;">✨ Tampilkan Semua Kategori</option>
-                    <?php 
-                    // Logika mengelompokkan kategori unik (unique) dari list layanan untuk opsi filter dropdown
-                    $kategori_list = [];
-                    foreach ($layanan_list as $l) {
-                        if (!in_array($l['kategori'], $kategori_list)) {
-                            $kategori_list[] = $l['kategori'];
-                        }
-                    }
-                    foreach ($kategori_list as $kat):
-                    ?>
-                        <option value="<?php echo htmlspecialchars($kat); ?>">📁 <?php echo htmlspecialchars($kat); ?></option>
-                     <?php endforeach; ?>
-                </select>
+            <div class="flex-grow-1 overflow-hidden">
+                <span class="d-block text-muted text-uppercase fw-bold" style="font-size: 0.6rem; letter-spacing: 0.08em; margin-bottom: 2px;">Kategori Layanan</span>
+                <div class="d-flex align-items-center justify-content-between">
+                    <span id="selectedKategoriLabel" class="fw-bold text-dark text-truncate" style="font-size: 0.92rem;">✨ Semua Kategori</span>
+                </div>
             </div>
-            <span class="text-secondary ms-2" style="pointer-events: none;"><i class="bi bi-chevron-down"></i></span>
+            <span class="dropdown-arrow-icon text-secondary ms-2" style="transition: transform 0.3s ease;"><i class="bi bi-chevron-down"></i></span>
+        </div>
+
+        <!-- Menu Dropdown Melayang Estetik (Glassmorphism & Micro-animations) -->
+        <div class="custom-dropdown-menu shadow-lg border-0 rounded-4 p-2 bg-white" id="customFilterMenu">
+            <div class="dropdown-item-custom active rounded-3 p-2.5 mb-1 d-flex align-items-center justify-content-between cursor-pointer" data-value="">
+                <div class="d-flex align-items-center gap-2.5">
+                    <span class="category-icon-box bg-primary-subtle text-primary"><i class="bi bi-grid-fill"></i></span>
+                    <div>
+                        <span class="fw-bold d-block text-dark" style="font-size: 0.88rem;">Semua Kategori</span>
+                        <small class="text-muted" style="font-size: 0.73rem;">Tampilkan seluruh paket layanan</small>
+                    </div>
+                </div>
+                <i class="bi bi-check-lg check-mark text-primary fw-bold"></i>
+            </div>
+            <?php foreach ($kategori_list as $kat): 
+                $kat_lower = strtolower($kat);
+                $icon_class = 'bi-folder-fill text-info';
+                if (str_contains($kat_lower, 'tekno')) $icon_class = 'bi-laptop-fill text-primary';
+                elseif (str_contains($kat_lower, 'desain')) $icon_class = 'bi-palette-fill text-warning';
+                elseif (str_contains($kat_lower, 'konsul')) $icon_class = 'bi-chat-left-quote-fill text-danger';
+                elseif (str_contains($kat_lower, 'hardware')) $icon_class = 'bi-cpu-fill text-success';
+                elseif (str_contains($kat_lower, 'web')) $icon_class = 'bi-code-slash text-purple';
+            ?>
+                <div class="dropdown-item-custom rounded-3 p-2.5 mb-1 d-flex align-items-center justify-content-between cursor-pointer" data-value="<?php echo htmlspecialchars($kat); ?>">
+                    <div class="d-flex align-items-center gap-2.5">
+                        <span class="category-icon-box bg-light"><i class="bi <?php echo $icon_class; ?>"></i></span>
+                        <span class="fw-semibold text-dark" style="font-size: 0.88rem;"><?php echo htmlspecialchars($kat); ?></span>
+                    </div>
+                    <i class="bi bi-check-lg check-mark text-primary fw-bold opacity-0"></i>
+                </div>
+            <?php endforeach; ?>
         </div>
     </div>
 </div>
@@ -181,4 +215,4 @@ $badge_color_map = [
 </div>
 
 <!-- Bagian 4: Skrip Kontrol Halaman Jasa Layanan -->
-<script src="assets/js/layanan.js"></script>
+<script src="assets/js/layanan.js?v=<?php echo time(); ?>"></script>

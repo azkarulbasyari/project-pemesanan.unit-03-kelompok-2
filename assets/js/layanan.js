@@ -46,34 +46,73 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // 2. Melakukan filter kategori layanan baik pada tampilan kartu (grid) maupun tabel
     function filterLayanan() {
-        const selectedKategori = $('#filterKategori').val().toLowerCase();
+        const selectedKategori = $.trim($('#filterKategori').val()).toLowerCase();
 
         // Filter tampilan kartu minimal
         $('.layanan-card-item').each(function() {
-            const cardKategori = $(this).data('kategori').toLowerCase();
+            const cardKategori = $.trim($(this).attr('data-kategori') || $(this).data('kategori') || '').toLowerCase();
             const matchesKategori = (selectedKategori === '') || (cardKategori === selectedKategori);
 
             if (matchesKategori) {
-                $(this).fadeIn(200); // Munculkan dengan animasi memudar masuk
+                $(this).removeClass('d-none').stop(true, true).css('opacity', 0).animate({ opacity: 1 }, 200);
             } else {
-                $(this).fadeOut(100); // Sembunyikan dengan animasi memudar keluar
+                $(this).addClass('d-none');
             }
         });
 
         // Filter tampilan baris tabel data layanan
         $('.layanan-table-row').each(function() {
-            const rowKategori = $(this).data('kategori').toLowerCase();
+            const rowKategori = $.trim($(this).attr('data-kategori') || $(this).data('kategori') || '').toLowerCase();
             const matchesKategori = (selectedKategori === '') || (rowKategori === selectedKategori);
 
             if (matchesKategori) {
-                $(this).show();
+                $(this).removeClass('d-none');
             } else {
-                $(this).hide();
+                $(this).addClass('d-none');
             }
         });
     }
 
-    // Picu fungsi filter ketika select-option kategori diubah
+    // Inisialisasi kontrol dropdown kustom kategori layanan
+    const dropdownContainer = $('.custom-dropdown-container');
+    const hiddenInput = $('#filterKategori');
+    const selectedLabel = $('#selectedKategoriLabel');
+
+    // Buka / Tutup menu dropdown kustom
+    $(document).on('click', '#customFilterTrigger', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('.custom-dropdown-container').toggleClass('open');
+    });
+
+    // Tutup dropdown saat mengklik di luar bidang elemen
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.custom-dropdown-container').length) {
+            $('.custom-dropdown-container').removeClass('open');
+        }
+    });
+
+    // Pilihan item dari menu dropdown kustom
+    $(document).on('click', '.dropdown-item-custom', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const val = $(this).attr('data-value') || '';
+        const text = $.trim($(this).find('span.fw-bold, span.fw-semibold').first().text() || val);
+        
+        $('.dropdown-item-custom').removeClass('active');
+        $('.dropdown-item-custom .check-mark').addClass('opacity-0');
+        
+        $(this).addClass('active');
+        $(this).find('.check-mark').removeClass('opacity-0');
+
+        hiddenInput.val(val);
+        selectedLabel.text(val === '' ? '✨ Semua Kategori' : text);
+
+        $('.custom-dropdown-container').removeClass('open');
+        filterLayanan();
+    });
+
+    // Picu fungsi filter ketika input hidden kategori berubah
     $('#filterKategori').on('change', function() {
         filterLayanan();
     });

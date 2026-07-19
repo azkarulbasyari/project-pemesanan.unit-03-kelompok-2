@@ -11,17 +11,17 @@ document.addEventListener("DOMContentLoaded", function () {
         $('#modalTambahPesananManual').modal('show');
     });
 
-    // Atur tabel agar menggunakan DataTables dengan bahasa Indonesia
+    // Atur tabel agar menggunakan DataTables dengan bahasa Indonesia dan penomoran urut dinamis
     $(document).ready(function () {
         tabelPesanan = $('#tabelPesanan').DataTable({
             "language": {
-                "sEmptyTable": "Tidak ada data yang tersedia pada tabel ini",
+                "sEmptyTable": "Tidak ada antrian pesanan yang tersedia pada tabel ini",
                 "sProcessing": "Sedang memproses...",
-                "sLengthMenu": "Tampilkan _MENU_ entri",
-                "sZeroRecords": "Tidak ditemukan data yang sesuai",
-                "sInfo": "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
-                "sInfoEmpty": "Menampilkan 0 sampai 0 dari 0 entri",
-                "sInfoFiltered": "(disaring dari _MAX_ entri keseluruhan)",
+                "sLengthMenu": "Tampilkan _MENU_ antrian",
+                "sZeroRecords": "Tidak ditemukan antrian pesanan yang sesuai",
+                "sInfo": "Menampilkan _START_ sampai _END_ dari _TOTAL_ antrian",
+                "sInfoEmpty": "Menampilkan 0 sampai 0 dari 0 antrian",
+                "sInfoFiltered": "(disaring dari _MAX_ total antrian)",
                 "sInfoPostFix": "",
                 "sSearch": "Cari Pesanan:",
                 "sUrl": "",
@@ -35,8 +35,16 @@ document.addEventListener("DOMContentLoaded", function () {
             "columnDefs": [
                 { "orderable": false, "targets": "no-sort" }
             ],
-            "order": [[0, 'desc']], // Urutan default berdasarkan nomor dari yang terbaru
-            "pageLength": 10 // Tampilkan 10 baris data per halaman
+            "order": [], // Tanpa pengurutan kolom NO secara terbalik
+            "pageLength": 10, // Tampilkan 10 baris data per halaman
+            "drawCallback": function (settings) {
+                // Penomoran otomatis dimulai dari nomor terkecil (1, 2, 3...) dari paling atas
+                var api = this.api();
+                var startIndex = api.context[0]._iDisplayStart;
+                api.column(0, { page: 'current' }).nodes().each(function (cell, i) {
+                    cell.innerHTML = startIndex + i + 1;
+                });
+            }
         });
     });
 
@@ -176,21 +184,18 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Buat badge sumber pesanan
                     let sumberBadge = '';
                     if (data.sumber_pesanan === 'telepon') {
-                        sumberBadge = '<span class="badge bg-light text-dark border rounded-pill px-2.5 py-1.5" style="font-size: 0.75rem;"><i class="bi bi-telephone-fill me-1 text-warning"></i> ☎️ Telepon</span>';
+                        sumberBadge = '<span class="badge-sumber"><i class="bi bi-telephone-fill text-success"></i> Telepon</span>';
                     } else if (data.sumber_pesanan === 'walk_in') {
-                        sumberBadge = '<span class="badge bg-light text-dark border rounded-pill px-2.5 py-1.5" style="font-size: 0.75rem;"><i class="bi bi-person-fill me-1 text-info"></i> 🚶 Walk In</span>';
+                        sumberBadge = '<span class="badge-sumber"><i class="bi bi-person-fill text-info"></i> Walk In</span>';
                     } else {
-                        sumberBadge = '<span class="badge bg-light text-dark border rounded-pill px-2.5 py-1.5" style="font-size: 0.75rem;"><i class="bi bi-globe me-1 text-primary"></i> 🌐 Online</span>';
+                        sumberBadge = '<span class="badge-sumber"><i class="bi bi-globe text-primary"></i> Online</span>';
                     }
 
                     const formattedPrice = "Rp " + parseFloat(data.total_harga).toLocaleString('id-ID');
 
-                    // Hitung urutan baris baru
-                    const nextNo = tabelPesanan.rows().count() + 1;
-
                     // Tambahkan data baru langsung ke dalam tabel
                     const newRowNode = tabelPesanan.row.add([
-                        nextNo,
+                        1,
                         `<strong>${data.kode_pesanan}</strong>`,
                         data.nama_pelanggan,
                         data.nama_layanan,
@@ -198,16 +203,19 @@ document.addEventListener("DOMContentLoaded", function () {
                         formattedPrice,
                         sumberBadge,
                         statusBadge,
-                        `<button class="btn btn-sm btn-outline-primary action-btn edit-btn" data-id="${data.id}" title="Edit Pesanan">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger action-btn delete-btn" data-id="${data.id}" data-kode="${data.kode_pesanan}" title="Hapus Pesanan">
-                            <i class="bi bi-trash"></i>
-                        </button>`
+                        `<div class="d-flex justify-content-center gap-1">
+                            <button class="btn btn-sm btn-outline-primary action-btn edit-btn" data-id="${data.id}" title="Edit Pesanan">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger action-btn delete-btn" data-id="${data.id}" data-kode="${data.kode_pesanan}" title="Hapus Pesanan">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>`
                     ]).draw(false).node();
 
                     // Hubungkan ID dan class ke baris tabel baru
                     $(newRowNode).attr('data-id', data.id);
+                    $(newRowNode).find('td:nth-child(2)').addClass('col-kode-pesanan text-nowrap');
                     $(newRowNode).find('td:nth-child(3)').addClass('col-nama-pelanggan');
                     $(newRowNode).find('td:nth-child(4)').addClass('col-nama-layanan');
                     $(newRowNode).find('td:nth-child(5)').addClass('col-tanggal-pesan');
@@ -215,8 +223,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     $(newRowNode).find('td:nth-child(7)').addClass('col-sumber-pesanan');
                     $(newRowNode).find('td:nth-child(8)').addClass('col-status-pesanan');
 
-                    // Urutkan kembali tabel dari yang terbaru
-                    tabelPesanan.order([0, 'desc']).draw(false);
+                    // Redraw tabel agar penomoran urut otomatis (drawCallback) diperbarui
+                    tabelPesanan.draw(false);
 
                     // Efek hijau sementara pada baris baru
                     $(newRowNode).addClass('table-success');

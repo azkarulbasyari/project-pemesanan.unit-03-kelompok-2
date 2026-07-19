@@ -68,11 +68,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['nama_lengkap'] = $user['nama_lengkap'];
                 $_SESSION['role'] = $user['role'];
             } else {
-                // Skenario fallback: jika operator belum terdaftar di DB, buat data session dummy otomatis
-                $_SESSION['user_id'] = 999;
-                $_SESSION['username'] = $username;
-                $_SESSION['nama_lengkap'] = ucfirst($username);
-                $_SESSION['role'] = 'operator';
+                // Buat user operator baru di database agar memiliki user_id valid (mencegah Foreign Key constraint error pada tabel pesanan)
+                $stmt_ins_user = mysqli_prepare($koneksi, "INSERT INTO users (nama_lengkap, username, email, password_hash, role, status) VALUES (?, ?, ?, ?, 'operator', 'aktif')");
+                $nama_lengkap_new = ucfirst($username);
+                $email_new = strtolower($username) . "@layanan.com";
+                $pass_hash_new = password_hash($password, PASSWORD_DEFAULT);
+                mysqli_stmt_bind_param($stmt_ins_user, "ssss", $nama_lengkap_new, $username, $email_new, $pass_hash_new);
+                
+                if (mysqli_stmt_execute($stmt_ins_user)) {
+                    $_SESSION['user_id'] = mysqli_insert_id($koneksi);
+                    $_SESSION['username'] = $username;
+                    $_SESSION['nama_lengkap'] = $nama_lengkap_new;
+                    $_SESSION['role'] = 'operator';
+                } else {
+                    $_SESSION['user_id'] = null;
+                    $_SESSION['username'] = $username;
+                    $_SESSION['nama_lengkap'] = ucfirst($username);
+                    $_SESSION['role'] = 'operator';
+                }
             }
             
             $_SESSION['success_message'] = "berhasil login";

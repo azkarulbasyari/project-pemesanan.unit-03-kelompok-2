@@ -163,7 +163,17 @@ if ($action === 'create') {
     $total_harga    = isset($_POST['total_harga']) ? floatval($_POST['total_harga']) : 0.00;
     $status_pesanan = isset($_POST['status_pesanan']) ? trim($_POST['status_pesanan']) : 'baru';
     $sumber_pesanan = isset($_POST['sumber_pesanan']) ? trim($_POST['sumber_pesanan']) : 'online';
-    $created_by     = $_SESSION['user_id'];
+    $created_by_raw = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : null;
+    $created_by     = null;
+    if ($created_by_raw !== null && $created_by_raw > 0) {
+        $stmt_usr_chk = mysqli_prepare($koneksi, "SELECT id FROM users WHERE id = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt_usr_chk, "i", $created_by_raw);
+        mysqli_stmt_execute($stmt_usr_chk);
+        $res_usr_chk = mysqli_stmt_get_result($stmt_usr_chk);
+        if ($res_usr_chk && mysqli_num_rows($res_usr_chk) > 0) {
+            $created_by = $created_by_raw;
+        }
+    }
 
     // Validasi data input di sisi server (Server-side Validation)
     if (empty($nama_pelanggan)) {
@@ -393,11 +403,21 @@ if ($action === 'update') {
     }
 }
 
-// 6. Hapus Data Pesanan: Menghapus data pesanan berdasarkan ID
+// 6. Hapus Data Pesanan: Menghapus data pesanan berdasarkan ID dan membersihkan data pelanggan jika tidak ada pesanan lain
 if ($action === 'delete') {
     $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
     if ($id <= 0) {
         sendError('ID pesanan tidak valid.');
+    }
+
+    // Ambil ID pelanggan terlebih dahulu sebelum pesanan dihapus
+    $stmt_get_cust = mysqli_prepare($koneksi, "SELECT pelanggan_id FROM pesanan WHERE id = ? LIMIT 1");
+    mysqli_stmt_bind_param($stmt_get_cust, "i", $id);
+    mysqli_stmt_execute($stmt_get_cust);
+    $res_cust = mysqli_stmt_get_result($stmt_get_cust);
+    $pelanggan_id = 0;
+    if ($res_cust && $row_c = mysqli_fetch_assoc($res_cust)) {
+        $pelanggan_id = intval($row_c['pelanggan_id']);
     }
 
     $stmt_del = mysqli_prepare($koneksi, "DELETE FROM pesanan WHERE id = ?");
@@ -405,6 +425,24 @@ if ($action === 'delete') {
     
     if (mysqli_stmt_execute($stmt_del)) {
         if (mysqli_stmt_affected_rows($stmt_del) > 0) {
+            // Hapus juga data pelanggan jika tidak memiliki pesanan lain di database
+            if ($pelanggan_id > 0) {
+                $stmt_chk_rem = mysqli_prepare($koneksi, "SELECT COUNT(*) as count FROM pesanan WHERE pelanggan_id = ?");
+                mysqli_stmt_bind_param($stmt_chk_rem, "i", $pelanggan_id);
+                mysqli_stmt_execute($stmt_chk_rem);
+                $res_rem = mysqli_stmt_get_result($stmt_chk_rem);
+                $rem_count = 0;
+                if ($res_rem && $row_r = mysqli_fetch_assoc($res_rem)) {
+                    $rem_count = intval($row_r['count']);
+                }
+
+                if ($rem_count === 0) {
+                    $stmt_del_cust = mysqli_prepare($koneksi, "DELETE FROM pelanggan WHERE id = ?");
+                    mysqli_stmt_bind_param($stmt_del_cust, "i", $pelanggan_id);
+                    mysqli_stmt_execute($stmt_del_cust);
+                }
+            }
+
             $_SESSION['success_message'] = "Pesanan berhasil dihapus.";
             sendJson(['status' => 'success', 'message' => 'Pesanan berhasil dihapus.']);
         } else {

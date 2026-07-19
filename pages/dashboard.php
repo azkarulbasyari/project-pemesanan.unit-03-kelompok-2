@@ -204,11 +204,11 @@ $timeline_query = mysqli_query($koneksi, "SELECT p.kode_pesanan, pl.nama_pelangg
                         <div class="table-responsive">
                             <table class="table table-hover align-middle table-sm mb-0" style="font-size: 0.82rem;">
                                 <thead>
-                                    <tr class="table-light text-secondary">
-                                        <th>Kode</th>
-                                        <th>Pelanggan</th>
-                                        <th>Layanan</th>
-                                        <th>Status</th>
+                                    <tr class="table-light text-secondary text-nowrap">
+                                        <th class="text-nowrap">Kode</th>
+                                        <th class="text-nowrap">Pelanggan</th>
+                                        <th class="text-nowrap">Layanan</th>
+                                        <th class="text-nowrap">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -223,11 +223,11 @@ $timeline_query = mysqli_query($koneksi, "SELECT p.kode_pesanan, pl.nama_pelangg
                                                 $status_badge = 'bg-danger';
                                             }
                                         ?>
-                                            <tr>
-                                                <td><strong><?php echo htmlspecialchars($row['kode_pesanan']); ?></strong></td>
-                                                <td><?php echo htmlspecialchars($row['nama_pelanggan']); ?></td>
-                                                <td><?php echo htmlspecialchars($row['nama_layanan']); ?></td>
-                                                <td><span class="badge <?php echo $status_badge; ?>" style="font-size: 0.68rem; padding: 4px 6px;"><?php echo ucfirst(htmlspecialchars($row['status_pesanan'])); ?></span></td>
+                                            <tr class="text-nowrap">
+                                                <td class="text-nowrap"><strong><?php echo htmlspecialchars($row['kode_pesanan']); ?></strong></td>
+                                                <td class="text-nowrap"><?php echo htmlspecialchars($row['nama_pelanggan']); ?></td>
+                                                <td class="text-nowrap"><?php echo htmlspecialchars($row['nama_layanan']); ?></td>
+                                                <td class="text-nowrap"><span class="badge <?php echo $status_badge; ?>" style="font-size: 0.68rem; padding: 4px 6px;"><?php echo ucfirst(htmlspecialchars($row['status_pesanan'])); ?></span></td>
                                             </tr>
                                         <?php endwhile; ?>
                                     <?php else: ?>
